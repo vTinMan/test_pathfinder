@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
   forbidden.push_front(FieldPoint(11, 6));
   forbidden.push_front(FieldPoint(12, 6));
 
+  forbidden.push_front(FieldPoint(3,  14));
   forbidden.push_front(FieldPoint(4,  14));
   forbidden.push_front(FieldPoint(5,  14));
   forbidden.push_front(FieldPoint(6,  14));
@@ -34,9 +35,13 @@ int main(int argc, char* argv[]) {
   forbidden.push_front(FieldPoint(18, 14));
   forbidden.push_front(FieldPoint(19, 14));
 
-  Pathfinder my_finder(FieldSize(20, 20), FieldPoint(3, 2), FieldPoint(8, 18), &forbidden);
-  my_finder.printintro();
+  Pathfinder my_finder(FieldSize(20, 20),
+                       FieldPoint(2, 2),
+                       FieldPoint(18, 18),
+                       &forbidden);
   my_finder.find_shortest_path();
+  my_finder.printintro();
   my_finder.print_output_graph();
+
   return EXIT_SUCCESS;
 }
