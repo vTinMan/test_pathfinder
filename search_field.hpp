@@ -51,6 +51,8 @@ class SearchField
   std::queue<SearchRoute*> backlog;
   PathStep* found_route;
   bool check_search_routes(SearchRoute* new_routes, FieldPoint* end_point);
+  bool out_of_field(int x, int y);
+  bool out_of_field(FieldPoint* point);
   SearchRoute* take_next_steps(SearchRoute* search_routes);
 public:
   SearchField(FieldSize field_size, FieldPoints* forbidden);

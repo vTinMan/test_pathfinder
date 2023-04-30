@@ -18,7 +18,9 @@ SearchField::SearchField(FieldSize field_size, FieldPoints* forbidden): size(fie
     field_points.push_back(new FieldState());
   }
   for(auto point : *forbidden) {
-    this->at(point.x(), point.y())->set_forbidden();
+    auto point_state = this->at(point.x(), point.y());
+    if (point_state == NULL) { continue; }
+    point_state->set_forbidden();
   }
   this->found_route = NULL;
 };
@@ -39,11 +41,21 @@ SearchField::~SearchField()
     delete state;
 }
 
+bool SearchField::out_of_field(int x, int y) {
+  if (x < 0 || y < 0)
+    return true;
+  if (this->size.x() <= x || this->size.y() <= y)
+    return true;
+  return false;
+}
+
+bool SearchField::out_of_field(FieldPoint* point) {
+  return out_of_field(point->x(), point->y());
+}
+
 bool SearchField::out_of_route(FieldPoint* point)
 {
-  if (point->x() < 0 || point->y() < 0)
-    return true;
-  if (this->size.x() <= point->x() || this->size.y() <= point->y())
+  if (out_of_field(point))
     return true;
   if (this->at(point->x(), point->y())->is_forbidden())
     return true;
@@ -52,11 +64,15 @@ bool SearchField::out_of_route(FieldPoint* point)
 
 FieldState* SearchField::at(int x, int y)
 {
+  if (out_of_field(x, y))
+    return NULL;
   return this->field_points.at(x * this->size.x() + y);
 }
 
 FieldState* SearchField::at(FieldPoint* point)
 {
+  if (out_of_field(point))
+    return NULL;
   return this->at(point->x(), point->y());
 }
 
