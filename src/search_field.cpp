@@ -1,4 +1,5 @@
 #include "search_field.hpp"
+#include <cstddef>
 
 Direction calc_step_direction(PathStep* s1)
 {

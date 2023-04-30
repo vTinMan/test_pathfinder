@@ -1,0 +1,49 @@
+name: Ruby
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test_cpp:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: compile bin
+      run: make main
+    - name: test run
+      run: ./out/pathfinder
+
+  test_c:
+    runs-on: ubuntu-latest
+    env:
+      LD_LIBRARY_PATH: ${{ github.workspace }}/out
+    steps:
+    - uses: actions/checkout@v3
+    - name: compile bin with lib
+      run: make pf2
+    - name: run test
+      run: ./out/pf2
+
+  test_rbext:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: ['2.1', '3.1']
+
+    env:
+      LD_LIBRARY_PATH: ${{ github.workspace }}/out
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+    - name: compile lib with ext
+      run: make rb_ext
+    - name: copy extension
+      run: cp ./out/pathfinder_ext.so ./rb
+    - name: run test
+      run: ruby ./rb/test.rb
