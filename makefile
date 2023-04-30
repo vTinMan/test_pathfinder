@@ -1,44 +1,64 @@
 CC=gcc
 CXX=g++
 AR=ar cr
+BDIR=build
+ODIR=out
+SDIR=src
 CXXFLAGS=-c -std=c++0x -fPIC
 CCFLAGS=-c -Wall -Werror -fPIC
-DLFLAGS=-L. -lpathfinder
+DLFLAGS=-L./$(ODIR) -lpathfinder
 LFLAGS=-fPIC
-RBHEADERS=-I/home/usr/.rvm/rubies/ruby-2.1.5/include/ruby-2.1.0 -I/home/usr/.rvm/rubies/ruby-2.1.5/include/ruby-2.1.0/x86_64-linux
+RBHDR:=$(shell ruby -rmkmf -e 'print RbConfig::CONFIG["rubyhdrdir"]')
+RBARCH:=$(shell ruby -rmkmf -e 'print RbConfig::CONFIG["arch"]')
 
-main: main.o pathfinder.o search_field.o findpath.o
-	$(CXX) -o pathfinder main.o pathfinder.o search_field.o findpath.o
+main: out_dir main_out
 
-pf2: pf_so main_c.o
-	$(CC) -o pf2 main_c.o $(DLFLAGS)
+pf2: out_dir pf_so pf2_out
 
-rb_ext: pathfinder_rbext.o pf_so
-	$(CC) -shared $(LFLAGS) -o pathfinder_ext.so pathfinder_rbext.o $(DLFLAGS)
+rb_ext: out_dir pf_so rb_ext_out
 
-pf_so: search_field.o pathfinder.o findpath.o
-	$(CXX) -shared $(LFLAGS) -o libpathfinder.so pathfinder.o search_field.o findpath.o
+pf_so: out_dir pf_so_out
 
-pf_a: search_field.o pathfinder.o
-	$(AR) libpathfinder.a pathfinder.o search_field.o
+pf_a: out_dir pf_a_out
 
-main.o:
-	$(CXX) $(CXXFLAGS) main.cpp
+main_out: $(BDIR)/main.o $(BDIR)/pathfinder.o $(BDIR)/search_field.o $(BDIR)/findpath.o
+	$(CXX) -o $(ODIR)/pathfinder $?
 
-main_c.o:
-	$(CC) $(CCFLAGS) -o main_c.o main.c $(DLFLAGS)
+pf2_out: $(BDIR)/main_c.o
+	$(CC) -o $(ODIR)/pf2 $? $(DLFLAGS)
 
-pathfinder.o:
-	$(CXX) $(CXXFLAGS) pathfinder.cpp
+pf_so_out: $(BDIR)/search_field.o $(BDIR)/pathfinder.o $(BDIR)/findpath.o
+	$(CXX) -shared $(LFLAGS) -o $(ODIR)/libpathfinder.so $?
 
-search_field.o:
-	$(CXX) $(CXXFLAGS) search_field.cpp
+rb_ext_out: $(BDIR)/pathfinder_rbext.o
+	$(CC) -shared $(LFLAGS) -o $(ODIR)/pathfinder_ext.so $? $(DLFLAGS)
 
-findpath.o:
-	$(CXX) $(CXXFLAGS) findpath.cpp
+pf_a_out: $(BDIR)/search_field.o $(BDIR)/pathfinder.o
+	$(AR) $(ODIR)/libpathfinder.a $?
 
-pathfinder_rbext.o:
-	$(CC) $(CCFLAGS) $(RBHEADERS) pathfinder_rbext.c $(DLFLAGS)
+$(BDIR)/main.o: build_dir
+	$(CXX) $(CXXFLAGS) $(SDIR)/main.cpp -o $@
+
+$(BDIR)/main_c.o: build_dir
+	$(CC) $(CCFLAGS) -o main_c.o $(SDIR)/main.c $(DLFLAGS) -o $@
+
+$(BDIR)/pathfinder.o: build_dir
+	$(CXX) $(CXXFLAGS) $(SDIR)/pathfinder.cpp -o $@
+
+$(BDIR)/search_field.o: build_dir
+	$(CXX) $(CXXFLAGS) $(SDIR)/search_field.cpp -o $@
+
+$(BDIR)/findpath.o: build_dir
+	$(CXX) $(CXXFLAGS) $(SDIR)/findpath.cpp -o $@
+
+$(BDIR)/pathfinder_rbext.o: build_dir
+	$(CC) $(CCFLAGS) -I$(RBHDR) -I$(RBHDR)/$(RBARCH) $(SDIR)/pathfinder_rbext.c $(DLFLAGS) -o $@
+
+build_dir:
+	mkdir $(BDIR)
+
+out_dir:
+	mkdir $(ODIR)
 
 clean:
-	rm -f pathfinder pf2 libpathfinder.so libpathfinder.a pathfinder_ext.so main.o main_c.o pathfinder.o pathfinder_rbext.o search_field.o findpath.o
+	rm -rf $(ODIR) $(BDIR)
